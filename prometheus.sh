@@ -19,6 +19,11 @@ directoryCheck /etc/prometheus/rules.d
 directoryCheck /etc/prometheus/files_sd
 directoryCheck /var/lib/prometheus
 
+## Update Permission
+sudo chown -R prometheus:prometheus /var/lib/prometheus
+sudo chown -R prometheus:prometheus /etc/prometheus
+sudo chmod -R 775 /etc/prometheus
+
 ## Download Prometheus
 echo "[INFO] Downloading Prometheus"
 
@@ -27,7 +32,10 @@ cd /tmp/prometheus
 githubDownload prometheus/prometheus latest linux-amd64 
 tar xvf prometheus*.tar.gz
 cd prometheus*/
-sudo mv prometheus promtool /usr/local/bin/
+sudo cp -r prometheus /usr/local/bin/
+sudo cp -r promtool /usr/local/bin/
+sudo chown -R prometheus:prometheus /usr/local/bin/prometheus
+sudo chown -R prometheus:prometheus /usr/local/bin/promtool
 
 ## Version Check
 echo "[INFO] Checking Prometheus Version"
@@ -66,9 +74,19 @@ EOF
 
 ## Create Prometheus Configuration File
 echo "[INFO] Creating Prometheus Configuration File"
-sudo cp /tmp/prometheus/prometheus.yml /etc/prometheus/prometheus.yml
+sudo cp -r prometheus.yml /etc/prometheus/
+sudo cp -r consoles /etc/prometheus/
+sudo cp -r console_libraries /etc/prometheus/
+sudo chown -R prometheus:prometheus /etc/prometheus/consoles
+sudo chown -R prometheus:prometheus /etc/prometheus/console_libraries
+sudo chown -R prometheus:prometheus /etc/prometheus/prometheus.yml
 
-## Update Permission
-sudo chown -R prometheus:prometheus /var/lib/prometheus
-sudo chown -R prometheus:prometheus /etc/prometheus
-sudo chmod -R 775 /etc/prometheus
+## Update Daemon
+echo "[INFO] Updating Prometheus Daemon"
+sudo systemctl daemon-reload
+sudo systemctl start prometheus
+sudo systemctl enable prometheus
+
+## Finished
+echo "[INFO] Prometheus Installation Finished"
+echo "[INFO] Prometheus is now running on http://localhost:9090"
